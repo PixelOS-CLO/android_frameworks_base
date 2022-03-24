@@ -383,7 +383,8 @@ public class UsbDeviceManager implements ActivityTaskManagerInternal.ScreenObser
                     + " user:" + userHandle);
         }
         // We are unlocked when the keyguard is down or non-secure.
-        mHandler.sendMessage(MSG_UPDATE_SCREEN_LOCK, (isShowing && secure));
+        mHandler.removeMessages(MSG_UPDATE_SCREEN_LOCK);
+        mHandler.sendMessageDelayed(MSG_UPDATE_SCREEN_LOCK, (isShowing && secure), 250);
     }
 
     @Override
