@@ -133,6 +133,14 @@ object WifiViewBinder {
                     }
                 }
 
+                launch {
+                    viewModel.wifiStandardIcon.collect { standardIcon ->
+                        wifiStandardView.isVisible = standardIcon != null
+                        if (standardIcon != null) {
+                            IconViewBinder.bind(standardIcon, wifiStandardView)
+                        }
+                    }
+                }
                 try {
                     awaitCancellation()
                 } finally {
