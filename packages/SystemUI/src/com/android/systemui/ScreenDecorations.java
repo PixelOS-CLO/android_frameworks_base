@@ -515,7 +515,8 @@ public class ScreenDecorations implements
         mDebugRoundedCornerFactory =
                 new RoundedCornerDecorProviderFactory(mDebugRoundedCornerDelegate);
         mCutoutFactory = getCutoutFactory();
-        mHwcScreenDecorationSupport = mContext.getDisplay().getDisplayDecorationSupport();
+        mHwcScreenDecorationSupport = (mContext.getResources().getBoolean(R.bool.config_usePhysicalPanelMasks)
+                            ? null : mContext.getDisplay().getDisplayDecorationSupport());
         updateHwLayerRoundedCornerDrawable();
         setupDecorations();
         setupCameraListener();
@@ -573,7 +574,8 @@ public class ScreenDecorations implements
                 if (!Objects.equals(newUniqueId, mDisplayUniqueId)) {
                     mDisplayUniqueId = newUniqueId;
                     final DisplayDecorationSupport newScreenDecorationSupport =
-                            mContext.getDisplay().getDisplayDecorationSupport();
+                            (mContext.getResources().getBoolean(R.bool.config_usePhysicalPanelMasks)
+                            ? null : mContext.getDisplay().getDisplayDecorationSupport());
 
                     mRoundedCornerResDelegate.updateDisplayUniqueId(newUniqueId, null);
 
@@ -1471,6 +1473,8 @@ public class ScreenDecorations implements
             if (shouldDrawCutout(getContext()) && hasCutout()) {
                 mBounds.addAll(displayInfo.displayCutout.getBoundingRects());
                 localBounds(mBoundingRect);
+                // Include the bitmap canvas without changing framework cutout/inset geometry.
+                mBoundingRect.union(getPhysicalCutoutMaskBounds());
                 updateGravity();
                 updateBoundingPath();
                 invalidate();
