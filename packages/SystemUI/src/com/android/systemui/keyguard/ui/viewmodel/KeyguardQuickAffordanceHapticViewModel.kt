@@ -18,6 +18,13 @@ package com.android.systemui.keyguard.ui.viewmodel
 
 //noinspection CleanArchitectureDependencyViolation
 
+import android.os.SystemClock
+import android.os.VibrationExtInfo
+import org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES
+import vendor.sun.hardware.vibratorExt.Effect.LOCKSCREEN_SHORTCUT
+import vendor.sun.hardware.vibratorExt.Effect.UNIFIED_ERROR
+import vendor.sun.hardware.vibratorExt.Effect.CLICK
+import vendor.sun.hardware.vibratorExt.Effect.DOUBLE_CLICK
 import com.android.systemui.Flags
 import com.android.systemui.keyguard.ui.binder.KeyguardBottomAreaVibrations
 import com.android.systemui.statusbar.VibratorHelper
@@ -33,46 +40,31 @@ constructor(private val msdlPlayer: MSDLPlayer, private val vibratorHelper: Vibr
         private set
 
     private var activated = false
+    private var lastActivationTime = Long.MIN_VALUE
 
     fun updateActivatedHistory(isActivated: Boolean) {
-        val toggleOn = !activated && isActivated
-        val toggleOff = activated && !isActivated
+        if (activated != isActivated) longPressed = false
         activated = isActivated
-        if (Flags.msdlFeedback()) {
-            playMSDLToggleHaptics(toggleOn, toggleOff)
-        }
     }
 
     fun onQuickAffordanceLongPress(isActivated: Boolean) {
         longPressed = true
-        if (!Flags.msdlFeedback()) {
-            // Without MSDL, play haptics on long press instead of activated history updates.
-            val vibration =
-                if (isActivated) {
-                    KeyguardBottomAreaVibrations.activated(vibratorHelper)
-                } else {
-                    KeyguardBottomAreaVibrations.deactivated(vibratorHelper)
-                }
-            vibratorHelper.vibrate(vibration)
-        }
+        val now = SystemClock.uptimeMillis()
+        if (lastActivationTime != Long.MIN_VALUE && now - lastActivationTime < 100L) return
+        lastActivationTime = now
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+            .setEffectId(LOCKSCREEN_SHORTCUT)
+            .setFallbackEffectId(CLICK)
+            .setVibrationAttributes(VIBRATION_ATTRIBUTES_MISC_SCENES)
+            .build())
     }
 
     fun onQuickAffordanceClick() {
-        if (Flags.msdlFeedback()) {
-            msdlPlayer.playToken(MSDLToken.FAILURE)
-        } else {
-            vibratorHelper.vibrate(KeyguardBottomAreaVibrations.shake(vibratorHelper))
-        }
-    }
-
-    private fun playMSDLToggleHaptics(toggleOn: Boolean, toggleOff: Boolean) {
-        if (!longPressed) return
-        if (toggleOn) {
-            msdlPlayer.playToken(MSDLToken.SWITCH_ON)
-        } else if (toggleOff) {
-            msdlPlayer.playToken(MSDLToken.SWITCH_OFF)
-        }
-        longPressed = false
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+            .setEffectId(UNIFIED_ERROR)
+            .setFallbackEffectId(DOUBLE_CLICK)
+            .setVibrationAttributes(VIBRATION_ATTRIBUTES_MISC_SCENES)
+            .build())
     }
 
     @AssistedFactory

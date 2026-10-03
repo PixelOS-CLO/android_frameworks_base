@@ -18,7 +18,6 @@ package com.android.settingslib;
 
 import static android.app.admin.DevicePolicyResources.Strings.Settings.DISABLED_BY_ADMIN_SWITCH_SUMMARY;
 import static android.app.admin.DevicePolicyResources.Strings.Settings.ENABLED_BY_ADMIN_SWITCH_SUMMARY;
-
 import static com.android.settingslib.RestrictedLockUtils.EnforcedAdmin;
 
 import android.app.AppOpsManager;
@@ -41,9 +40,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceViewHolder;
-import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.settingslib.widget.SettingsThemeHelper;
+
+import org.sun.custom.preference.SwitchPreferenceCompat;
 
 /**
  * Version of SwitchPreferenceCompat that can be disabled by a device admin

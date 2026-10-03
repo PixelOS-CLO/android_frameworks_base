@@ -21,6 +21,7 @@ import android.content.ClipData;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Region;
+import android.os.VibrationExtInfo;
 import android.os.Bundle;
 import android.os.RemoteCallback;
 import android.util.MergedConfiguration;
@@ -386,4 +387,5 @@ interface IWindowSession {
      */
     oneway void notifyImeWindowVisibilityChangedFromClient(IWindow window, boolean visible,
             in ImeTracker.Token statsToken);
+    oneway void performHapticFeedbackExt(in VibrationExtInfo info);
 }

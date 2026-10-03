@@ -64,6 +64,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
+import android.os.VibrationExtInfo
+import com.android.systemui.statusbar.VibratorHelper
+import org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_QS_TILE
+import vendor.sun.hardware.vibratorExt.Effect.BUTTON_CLICK
+import vendor.sun.hardware.vibratorExt.Effect.CLICK
 
 private const val TAG = "FooterActionsViewModel"
 
@@ -133,7 +138,8 @@ class FooterActionsViewModel(
         private val textFeedbackInteractor: TextFeedbackInteractor,
         private val selectedUserInteractor: SelectedUserInteractor,
         @Named(PM_LITE_ENABLED) private val showPowerButton: Boolean,
-        private val keyguardStateController: KeyguardStateController
+        private val keyguardStateController: KeyguardStateController,
+        private val vibratorHelper: VibratorHelper,
     ) {
         /** Create a [FooterActionsViewModel] bound to the lifecycle of [lifecycleOwner]. */
         fun create(lifecycleOwner: LifecycleOwner): FooterActionsViewModel {
@@ -163,6 +169,7 @@ class FooterActionsViewModel(
                 showPowerButton,
                 selectedUserInteractor,
                 keyguardStateController,
+                vibratorHelper,
             )
         }
 
@@ -190,6 +197,7 @@ class FooterActionsViewModel(
                 showPowerButton,
                 selectedUserInteractor,
                 keyguardStateController,
+                vibratorHelper,
             )
         }
     }
@@ -205,6 +213,7 @@ fun createFooterActionsViewModel(
     showPowerButton: Boolean,
     selectedUserInteractor: SelectedUserInteractor,
     keyguardStateController: KeyguardStateController,
+    vibratorHelper: VibratorHelper,
 ): FooterActionsViewModel {
     suspend fun observeDeviceMonitoringDialogRequests(quickSettingsContext: Context) {
         footerActionsInteractor.deviceMonitoringDialogRequests.collect {
@@ -220,6 +229,11 @@ fun createFooterActionsViewModel(
             return
         }
 
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder().apply {
+            setEffectId(BUTTON_CLICK)
+            setFallbackEffectId(CLICK)
+            setVibrationAttributes(VIBRATION_ATTRIBUTES_QS_TILE)
+        }.build())
         footerActionsInteractor.showDeviceMonitoringDialog(quickSettingsContext, expandable)
     }
 
@@ -228,6 +242,11 @@ fun createFooterActionsViewModel(
             return
         }
 
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder().apply {
+            setEffectId(BUTTON_CLICK)
+            setFallbackEffectId(CLICK)
+            setVibrationAttributes(VIBRATION_ATTRIBUTES_QS_TILE)
+        }.build())
         activityStarter.dismissKeyguardThenExecute(
             {
                 footerActionsInteractor.showForegroundServicesDialog(expandable)
@@ -243,6 +262,11 @@ fun createFooterActionsViewModel(
             return
         }
 
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder().apply {
+            setEffectId(BUTTON_CLICK)
+            setFallbackEffectId(CLICK)
+            setVibrationAttributes(VIBRATION_ATTRIBUTES_QS_TILE)
+        }.build())
         footerActionsInteractor.showUserSwitcher(expandable)
     }
 
@@ -251,6 +275,11 @@ fun createFooterActionsViewModel(
             return
         }
 
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder().apply {
+            setEffectId(BUTTON_CLICK)
+            setFallbackEffectId(CLICK)
+            setVibrationAttributes(VIBRATION_ATTRIBUTES_QS_TILE)
+        }.build())
         footerActionsInteractor.showSettings(expandable)
     }
 
@@ -273,6 +302,11 @@ fun createFooterActionsViewModel(
             return
         }
 
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder().apply {
+            setEffectId(BUTTON_CLICK)
+            setFallbackEffectId(CLICK)
+            setVibrationAttributes(VIBRATION_ATTRIBUTES_QS_TILE)
+        }.build())
         footerActionsInteractor.showPowerMenuDialog(globalActionsDialogLite, expandable)
     }
 

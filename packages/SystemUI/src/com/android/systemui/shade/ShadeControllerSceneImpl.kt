@@ -16,6 +16,7 @@
 
 package com.android.systemui.shade
 
+import android.os.VibrationExtInfo
 import android.view.MotionEvent
 import com.android.systemui.assist.AssistManager
 import com.android.systemui.dagger.SysUISingleton
@@ -254,5 +255,9 @@ constructor(
 
     override fun performHapticFeedback(constant: Int) {
         vibratorHelper.performHapticFeedback(notificationStackScrollLayout, constant)
+    }
+
+    override fun performHapticFeedbackExt(info: VibrationExtInfo) {
+        vibratorHelper.performHapticFeedbackExt(notificationStackScrollLayout, info)
     }
 }

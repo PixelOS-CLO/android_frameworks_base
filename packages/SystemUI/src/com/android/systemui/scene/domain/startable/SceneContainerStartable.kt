@@ -18,6 +18,7 @@ package com.android.systemui.scene.domain.startable
 
 import android.app.StatusBarManager
 import android.os.PowerManager
+import android.os.VibrationAttributes
 import android.view.SurfaceControl
 import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.snapshotFlow
@@ -177,6 +178,11 @@ constructor(
         get() = centralSurfacesOptLazy.get().getOrNull()
 
     private val authInteractionProperties = AuthInteractionProperties()
+    private val authErrorInteractionProperties = AuthInteractionProperties(
+        VibrationAttributes.Builder(authInteractionProperties.vibrationAttributes)
+            .setFlags(VibrationAttributes.FLAG_USE_PLATFORM_EFFECT)
+            .build()
+    )
 
     private val shadePendingDisplayId: Flow<Int> = shadeDisplaysInteractor.get().pendingDisplayId
 
@@ -584,7 +590,7 @@ constructor(
                                 if (Flags.msdlFeedback()) {
                                     msdlPlayer.playToken(
                                         MSDLToken.FAILURE,
-                                        authInteractionProperties,
+                                        authErrorInteractionProperties,
                                     )
                                 } else {
                                     vibratorHelper.vibrateAuthError(

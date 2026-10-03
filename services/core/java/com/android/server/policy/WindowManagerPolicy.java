@@ -76,6 +76,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.RemoteException;
+import android.os.VibrationExtInfo;
 import android.util.Slog;
 import android.util.proto.ProtoOutputStream;
 import android.view.Display;
@@ -1253,4 +1254,5 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
      * @param singleKeyRule The rule to inject.
      */
     void addSingleKeyRule(@NonNull SingleKeyGestureDetector.SingleKeyRule singleKeyRule);
+    void performHapticFeedbackExt(int uid, String packageName, VibrationExtInfo info);
 }

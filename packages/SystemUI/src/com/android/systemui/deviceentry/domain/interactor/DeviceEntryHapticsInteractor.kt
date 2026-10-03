@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
+import com.android.systemui.deviceentry.data.repository.DeviceEntryFaceAuthRepository
 
 /**
  * Business logic for device entry haptic events. Determines whether the haptic should play. In
@@ -49,6 +50,7 @@ class DeviceEntryHapticsInteractor
 @Inject
 constructor(
     biometricSettingsRepository: BiometricSettingsRepository,
+    deviceEntryFaceAuthRepository: DeviceEntryFaceAuthRepository,
     deviceEntryBiometricAuthInteractor: DeviceEntryBiometricAuthInteractor,
     deviceEntryFingerprintAuthInteractor: DeviceEntryFingerprintAuthInteractor,
     deviceEntrySourceInteractor: DeviceEntrySourceInteractor,
@@ -60,6 +62,8 @@ constructor(
     private val systemClock: SystemClock,
     dumpManager: DumpManager,
 ) : FlowDumperImpl(dumpManager) {
+    private val faceAuthenticated = deviceEntryFaceAuthRepository.isCurrentUserAuthenticated
+
     private val powerButtonSideFpsEnrolled =
         combineTransform(
                 fingerprintPropertyRepository.sensorType,
@@ -102,7 +106,7 @@ constructor(
                 if (!allowHaptic) {
                     logger.d("Skip success haptic. Recent power button press or button is down.")
                 }
-                allowHaptic
+                allowHaptic && !faceAuthenticated.value
             }
             // map to Unit
             .map {}

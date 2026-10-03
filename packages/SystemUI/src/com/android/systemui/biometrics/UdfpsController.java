@@ -29,6 +29,9 @@ import static com.android.internal.util.LatencyTracker.ACTION_UDFPS_ILLUMINATE;
 import static com.android.internal.util.LatencyTracker.ACTION_UDFPS_OVERLAY_ATTACHED_AFTER_GOING_TO_SLEEP;
 import static com.android.internal.util.Preconditions.checkNotNull;
 import static com.android.systemui.classifier.Classifier.UDFPS_AUTHENTICATION;
+import static org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_FINGERPRINT_UNLOCK;
+import static vendor.sun.hardware.vibratorExt.Effect.CLICK;
+import static vendor.sun.hardware.vibratorExt.Effect.UNIFIED_SUCCESS;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -51,12 +54,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Trace;
-import android.os.VibrationAttributes;
-import android.os.VibrationEffect;
+import android.os.VibrationExtInfo;
 import android.provider.Settings;
 import android.util.BoostFramework;
 import android.util.Log;
-import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -116,7 +117,6 @@ import com.android.systemui.util.concurrency.DelayableExecutor;
 import com.android.systemui.util.concurrency.Execution;
 import com.android.systemui.util.time.SystemClock;
 
-import com.google.android.msdl.data.model.MSDLToken;
 import com.google.android.msdl.domain.MSDLPlayer;
 
 import dagger.Lazy;
@@ -238,24 +238,6 @@ public class UdfpsController implements DozeReceiver, Dumpable {
     private BoostFramework mPerf = null;
     private boolean mIsPerfLockAcquired = false;
     private static final int BOOST_DURATION_TIMEOUT = 2000;
-
-    @VisibleForTesting
-    public static final VibrationAttributes UDFPS_VIBRATION_ATTRIBUTES =
-            new VibrationAttributes.Builder()
-                    // vibration will bypass battery saver mode:
-                    .setUsage(VibrationAttributes.USAGE_COMMUNICATION_REQUEST)
-                    .build();
-    @VisibleForTesting
-    public static final VibrationAttributes LOCK_ICON_VIBRATION_ATTRIBUTES =
-            new VibrationAttributes.Builder()
-                    .setUsage(VibrationAttributes.USAGE_TOUCH)
-                    .build();
-
-    // haptic to use for successful device entry
-    public static final VibrationEffect EFFECT_CLICK =
-            VibrationEffect.get(VibrationEffect.EFFECT_CLICK);
-
-    public static final int LONG_PRESS = HapticFeedbackConstants.LONG_PRESS;
 
     private final ScreenLifecycle.Observer mScreenObserver = new ScreenLifecycle.Observer() {
         @Override
@@ -508,9 +490,6 @@ public class UdfpsController implements DozeReceiver, Dumpable {
     };
 
     private void tryDismissingKeyguard() {
-        if (!mOnFingerDown) {
-            playStartHaptic();
-        }
         mKeyguardViewManager.notifyKeyguardAuthenticated(false /* primaryAuth */);
         mAttemptedToDismissKeyguard = true;
     }
@@ -830,17 +809,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
      */
     @VisibleForTesting
     public void playStartHaptic() {
-        if (mAccessibilityManager.isTouchExplorationEnabled()) {
-            if (mOverlay != null && mOverlay.getTouchOverlay() != null) {
-                mVibrator.performHapticFeedback(
-                        mOverlay.getTouchOverlay(),
-                        HapticFeedbackConstants.CONTEXT_CLICK
-                );
-            } else {
-                Log.e(TAG, "No haptics played. Could not obtain overlay view to perform"
-                        + "vibration. Either the controller overlay is null or has no view");
-            }
-        }
+        // Do nothing
     }
 
     @Override
@@ -945,20 +914,11 @@ public class UdfpsController implements DozeReceiver, Dumpable {
             }
             mKeyguardViewManager.showPrimaryBouncer(true, "UdfpsController#onAodInterrupt");
 
-            // play the same haptic as the DeviceEntryIcon longpress
-            if (Flags.msdlFeedback()) {
-                mMsdlPlayer.playToken(MSDLToken.LONG_PRESS, null);
-            } else {
-                if (mOverlay != null && mOverlay.getTouchOverlay() != null) {
-                    mVibrator.performHapticFeedback(
-                            mOverlay.getTouchOverlay(),
-                            UdfpsController.LONG_PRESS
-                    );
-                } else {
-                    Log.e(TAG, "No haptics played. Could not obtain overlay view to perform"
-                            + "vibration. Either the controller overlay is null or has no view");
-                }
-            }
+            mVibrator.vibrateExt(new VibrationExtInfo.Builder()
+                    .setEffectId(UNIFIED_SUCCESS)
+                    .setFallbackEffectId(CLICK)
+                    .setVibrationAttributes(VIBRATION_ATTRIBUTES_FINGERPRINT_UNLOCK)
+                    .build());
             return;
         }
 
@@ -1120,8 +1080,6 @@ public class UdfpsController implements DozeReceiver, Dumpable {
         }
 
         if (!mOnFingerDown) {
-            playStartHaptic();
-
             mDeviceEntryFaceAuthInteractor.onUdfpsSensorTouched();
         }
         mOnFingerDown = true;

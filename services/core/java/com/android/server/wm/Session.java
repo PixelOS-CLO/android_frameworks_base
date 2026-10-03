@@ -37,7 +37,6 @@ import static android.os.Trace.TRACE_TAG_WINDOW_MANAGER;
 import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 import static android.view.WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG;
 import static android.view.WindowManager.LayoutParams.isSystemAlertWindowType;
-
 import static com.android.internal.protolog.WmProtoLogGroups.WM_DEBUG_IME;
 import static com.android.server.wm.WindowManagerDebugConfig.DEBUG;
 import static com.android.server.wm.WindowManagerDebugConfig.TAG_WM;
@@ -51,6 +50,7 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.ShortcutServiceInternal;
 import android.graphics.Rect;
 import android.graphics.Region;
@@ -63,6 +63,8 @@ import android.os.RemoteCallback;
 import android.os.RemoteException;
 import android.os.Trace;
 import android.os.UserHandle;
+import android.os.VibrationAttributes;
+import android.os.VibrationExtInfo;
 import android.permission.PermissionManager;
 import android.text.TextUtils;
 import android.util.ArraySet;
@@ -1056,6 +1058,36 @@ class Session extends IWindowSession.Stub implements IBinder.DeathRecipient {
                 ImeTracker.forLogging().onFailed(statsToken,
                         ImeTracker.PHASE_SERVER_NOTIFY_IME_VISIBILITY_CHANGED_FROM_CLIENT);
             }
+        }
+    }
+    @Override
+    public void performHapticFeedbackExt(VibrationExtInfo info) {
+        if (info == null) return;
+        int effect = info.getEffectId();
+        if (!((effect >= 0 && effect <= 5) || (effect > 2000 && effect < 2022))) {
+            throw new IllegalArgumentException("Only haptic effects are allowed from a window");
+        }
+        VibrationAttributes attrs = info.getVibrationAttributes();
+        int usage = attrs == null ? VibrationAttributes.USAGE_TOUCH : attrs.getUsage();
+        boolean ordinaryTouch = usage == VibrationAttributes.USAGE_TOUCH
+                || usage == VibrationAttributes.USAGE_CUSTOM_BACK_GESTURE_DRAG
+                || usage == VibrationAttributes.USAGE_CUSTOM_MISC_SCENES
+                || usage == VibrationAttributes.USAGE_CUSTOM_QS_TILE
+                || usage == VibrationAttributes.USAGE_CUSTOM_SLIDER
+                || usage == VibrationAttributes.USAGE_CUSTOM_SWITCH;
+        if (!ordinaryTouch && mService.mContext.checkPermission(
+                android.Manifest.permission.VIBRATE_SYSTEM_CONSTANTS, mPid, mUid)
+                != PackageManager.PERMISSION_GRANTED) {
+            usage = VibrationAttributes.USAGE_TOUCH;
+        }
+        VibrationExtInfo request = new VibrationExtInfo.Builder(info)
+                .setVibrationAttributes(VibrationAttributes.createForUsage(usage))
+                .build();
+        long identity = Binder.clearCallingIdentity();
+        try {
+            mService.mPolicy.performHapticFeedbackExt(mUid, mPackageName, request);
+        } finally {
+            Binder.restoreCallingIdentity(identity);
         }
     }
 }

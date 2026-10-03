@@ -19,7 +19,9 @@ package android.widget;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.os.Build;
+import android.os.SystemClock;
 import android.util.AttributeSet;
+import android.view.HapticFeedbackConstants;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 
@@ -73,6 +75,15 @@ public class SeekBar extends AbsSeekBar {
 
     @UnsupportedAppUsage
     private OnSeekBarChangeListener mOnSeekBarChangeListener;
+    private boolean mAutomaticHapticFeedbackEnabled = true;
+    private long mLastHapticTime;
+    private int mLastHapticProgress;
+
+    /** @hide */
+    public void setAutomaticHapticFeedbackEnabled(boolean enabled) {
+        mAutomaticHapticFeedbackEnabled = enabled;
+    }
+
 
     public SeekBar(Context context) {
         this(context, null);
@@ -98,6 +109,18 @@ public class SeekBar extends AbsSeekBar {
         if (mOnSeekBarChangeListener != null) {
             mOnSeekBarChangeListener.onProgressChanged(this, progress, fromUser);
         }
+        if (fromUser && mAutomaticHapticFeedbackEnabled && isEnabled()
+                && progress == getProgress() && progress != mLastHapticProgress) {
+            final long now = SystemClock.uptimeMillis();
+            final boolean atEdge = progress == getMin() || progress == getMax();
+            if (atEdge || now - mLastHapticTime >= 25) {
+                if (performHapticFeedback(atEdge ? HapticFeedbackConstants.SEGMENT_TICK
+                        : HapticFeedbackConstants.SEGMENT_FREQUENT_TICK)) {
+                    mLastHapticTime = now;
+                }
+            }
+        }
+        mLastHapticProgress = getProgress();
     }
 
     /**

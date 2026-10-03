@@ -16,6 +16,9 @@
 
 package com.android.systemui.volume.dialog.ringer.ui.viewmodel
 
+import android.os.VibrationExtInfo
+import vendor.sun.hardware.vibratorExt.Effect
+
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager.RINGER_MODE_NORMAL
@@ -171,15 +174,15 @@ constructor(
     }
 
     private fun provideTouchFeedback(ringerMode: RingerMode) {
-        when (ringerMode.value) {
-            RINGER_MODE_NORMAL -> {
-                ringerInteractor.scheduleTouchFeedback()
-                null
-            }
-            RINGER_MODE_SILENT -> VibrationEffect.get(VibrationEffect.EFFECT_CLICK)
-            RINGER_MODE_VIBRATE -> VibrationEffect.get(VibrationEffect.EFFECT_DOUBLE_CLICK)
-            else -> VibrationEffect.get(VibrationEffect.EFFECT_DOUBLE_CLICK)
-        }?.let { vibrator.vibrate(it, sonificiationVibrationAttributes) }
+        if (ringerMode.value == RINGER_MODE_NORMAL) ringerInteractor.scheduleTouchFeedback()
+        if (ringerMode.value == RINGER_MODE_SILENT) return
+        val normal = ringerMode.value == RINGER_MODE_NORMAL
+        vibrator.vibrateExt(VibrationExtInfo.Builder()
+            .setEffectId(if (normal) Effect.ALERT_SLIDER_BOTTOM
+                else Effect.ALERT_SLIDER_MIDDLE)
+            .setFallbackEffectId(if (normal) VibrationEffect.EFFECT_HEAVY_CLICK
+                else VibrationEffect.EFFECT_DOUBLE_CLICK)
+            .build())
     }
 
     private fun VolumeDialogRingerModel.toViewModel(

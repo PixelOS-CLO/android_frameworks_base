@@ -1,0 +1,30 @@
+<!--
+    SPDX-FileCopyrightText: The SunOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+
+<resources>
+    <java-symbol type="string" name="vibrationPattern_notification_dz_dz" />
+    <java-symbol type="string" name="vibrationPattern_notification_mm_dz" />
+    <java-symbol type="string" name="vibrationPattern_notification_da_mm_da" />
+    <java-symbol type="string" name="vibrationPattern_notification_da_da_da_mm" />
+    <java-symbol type="string" name="vibrationPattern_notification_dz" />
+    <java-symbol type="string" name="vibrationPattern_notification_bell" />
+    <java-symbol type="string" name="vibrationPattern_notification_kick" />
+    <java-symbol type="string" name="vibrationPattern_notification_strings" />
+    <java-symbol type="string" name="vibrationPattern_notification_water_drop" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_dzzz_dzzz" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_dzzz_da" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_mm_mm_mm" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_da_da_dzzz" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_da_dzzz_da" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_drums" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_raise" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_waltz" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_cut" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_clock" />
+    <java-symbol type="string" name="vibrationPattern_ringtone_short" />
+    <java-symbol type="string" name="haptic_style_crisp" />
+    <java-symbol type="string" name="haptic_style_gentle" />
+    <java-symbol type="bool" name="config_enableVibratorExt" />
+</resources>

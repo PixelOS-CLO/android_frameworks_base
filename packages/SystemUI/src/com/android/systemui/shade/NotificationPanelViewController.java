@@ -44,6 +44,8 @@ import static com.android.systemui.util.DumpUtilsKt.asIndenting;
 import static com.android.systemui.util.kotlin.JavaAdapterKt.collectFlow;
 
 import static kotlinx.coroutines.flow.StateFlowKt.MutableStateFlow;
+import static org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES;
+import static vendor.sun.hardware.vibratorExt.Effect.EXPAND_PANEL;
 
 import static java.lang.Float.isNaN;
 
@@ -68,11 +70,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Trace;
+import android.os.VibrationExtInfo;
 import android.provider.Settings;
 import android.util.IndentingPrintWriter;
 import android.util.Log;
 import android.util.MathUtils;
-import android.view.Display;
 import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
 import android.view.InputDevice;
@@ -96,7 +98,6 @@ import com.android.internal.policy.SystemBarUtils;
 import com.android.internal.statusbar.IStatusBarService;
 import com.android.internal.util.LatencyTracker;
 import com.android.keyguard.ActiveUnlockConfig;
-import com.android.keyguard.EmergencyButton;
 import com.android.keyguard.EmergencyButtonController;
 import com.android.keyguard.KeyguardUnfoldTransition;
 import com.android.keyguard.KeyguardUpdateMonitor;
@@ -221,6 +222,8 @@ import kotlin.Unit;
 import kotlinx.coroutines.CoroutineDispatcher;
 import kotlinx.coroutines.flow.MutableStateFlow;
 import kotlinx.coroutines.flow.StateFlow;
+import org.sun.os.CustomVibrationAttributes;
+import vendor.sun.hardware.vibratorExt.Effect;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -321,7 +324,6 @@ public final class NotificationPanelViewController implements
     private final LockscreenShadeTransitionController mLockscreenShadeTransitionController;
     private final TapAgainViewController mTapAgainViewController;
     private final ShadeHeaderController mShadeHeaderController;
-    private final boolean mVibrateOnOpening;
     private final VelocityTracker mVelocityTracker = VelocityTracker.obtain();
     private final FlingAnimationUtils mFlingAnimationUtilsClosing;
     private final FlingAnimationUtils mFlingAnimationUtilsDismissing;
@@ -742,7 +744,6 @@ public final class NotificationPanelViewController implements
                 R.bool.config_enableNotificationShadeDrag);
         mVibratorHelper = vibratorHelper;
         mMSDLPlayer = msdlPlayer;
-        mVibrateOnOpening = mResources.getBoolean(R.bool.config_vibrateOnIconAnimation);
         mShadeTouchableRegionManager = shadeTouchableRegionManager;
         mSystemClock = systemClock;
         mKeyguardMediaController = keyguardMediaController;
@@ -2475,6 +2476,14 @@ public final class NotificationPanelViewController implements
     }
 
     public void performHapticFeedback(int constant) {
+        if (constant == HapticFeedbackConstants.GESTURE_START) {
+            performHapticFeedbackExt(new VibrationExtInfo.Builder()
+                    .setEffectId(Effect.EXPAND_PANEL)
+                    .setFallbackEffectId(VibrationExtInfo.CLICK)
+                    .setVibrationAttributes(CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES)
+                    .build());
+            return;
+        }
         if (msdlFeedback()) {
             MSDLToken token;
             switch (constant) {
@@ -2890,7 +2899,7 @@ public final class NotificationPanelViewController implements
      *                         gesture), we always play haptic.
      */
     private void maybeVibrateOnOpening(boolean openingWithTouch) {
-        if (mVibrateOnOpening && mBarState != KEYGUARD && mBarState != SHADE_LOCKED) {
+        if (mBarState != KEYGUARD && mBarState != SHADE_LOCKED) {
             if (!openingWithTouch || !mHasVibratedOnOpen) {
                 performHapticFeedback(HapticFeedbackConstants.GESTURE_START);
                 mHasVibratedOnOpen = true;
@@ -4350,4 +4359,8 @@ public final class NotificationPanelViewController implements
             return super.performAccessibilityAction(host, action, args);
         }
     }
+    public void performHapticFeedbackExt(VibrationExtInfo info) {
+        mVibratorHelper.performHapticFeedbackExt(mView, info);
+    }
+
 }

@@ -16,6 +16,14 @@
 
 package com.android.systemui.volume.dialog.sliders.ui.viewmodel
 
+import android.os.SystemProperties
+import android.os.VibrationExtInfo
+import com.android.systemui.statusbar.VibratorHelper
+import org.sun.os.CustomVibrationAttributes
+import vendor.sun.hardware.vibratorExt.Effect
+
+import android.os.VibrationEffect
+import kotlinx.coroutines.flow.filter
 import android.content.Context
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEvent
@@ -76,7 +84,11 @@ constructor(
     private val systemClock: SystemClock,
     private val logger: VolumeDialogLogger,
     private val uiEventLogger: UiEventLogger,
+    private val vibratorHelper: VibratorHelper,
 ) {
+
+    private var lastButtonTime = Long.MIN_VALUE
+    private var lastButtonHapticTime = Long.MIN_VALUE
 
     private val userVolumeUpdates = MutableStateFlow<VolumeUpdate?>(null)
     private val model: Flow<VolumeDialogStreamModel> = interactor.slider
@@ -139,6 +151,35 @@ constructor(
             .filterNotNull()
 
     init {
+        inputEventsInteractor.event
+            .filter { it is SliderInputEvent.Button }
+            .onEach {
+                val stream = model.first()
+                if (!stream.isActive || interactor.isDisabledByZenMode.first()) return@onEach
+                val now = systemClock.uptimeMillis()
+                val repeat = lastButtonTime != Long.MIN_VALUE && now - lastButtonTime < 100L
+                lastButtonTime = now
+                if (!repeat) return@onEach
+                val interval = SystemProperties.getLong("sys.sun.haptic.slider_interval", 50L)
+                    .coerceIn(0L, 1000L)
+                if (lastButtonHapticTime != Long.MIN_VALUE && now - lastButtonHapticTime < interval) {
+                    return@onEach
+                }
+                val edge = stream.level == stream.levelMin || stream.level == stream.levelMax
+                val amplitude = if (edge) 1f else
+                    ((stream.level - stream.levelMin).toFloat() /
+                        (stream.levelMax - stream.levelMin).coerceAtLeast(1)).coerceIn(0.01f, 1f)
+                lastButtonHapticTime = now
+                vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+                    .setEffectId(if (edge) Effect.SLIDER_EDGE
+                        else Effect.SLIDER_STEP)
+                    .setFallbackEffectId(VibrationEffect.EFFECT_TICK)
+                    .setAmplitude(amplitude)
+                    .setVibrationAttributes(CustomVibrationAttributes.VIBRATION_ATTRIBUTES_SLIDER)
+                    .build())
+            }
+            .launchIn(coroutineScope)
+
         userVolumeUpdates
             .mapNotNull { it?.level }
             .distinctUntilChanged()

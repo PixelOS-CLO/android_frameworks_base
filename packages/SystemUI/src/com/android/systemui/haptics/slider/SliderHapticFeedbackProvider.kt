@@ -16,6 +16,11 @@
 
 package com.android.systemui.haptics.slider
 
+import android.os.VibrationExtInfo
+import org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_SLIDER
+import vendor.sun.hardware.vibratorExt.Effect.SLIDER_EDGE
+import vendor.sun.hardware.vibratorExt.Effect.SLIDER_STEP
+import vendor.sun.hardware.vibratorExt.Effect.TICK
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.view.VelocityTracker
@@ -71,13 +76,12 @@ class SliderHapticFeedbackProvider(
      * @param[absoluteVelocity] Velocity of the handle when it reached the bookend.
      */
     private fun vibrateOnEdgeCollision(absoluteVelocity: Float) {
-        val powerScale = scaleOnEdgeCollision(absoluteVelocity)
-        val properties =
-            InteractionProperties.DynamicVibrationScale(
-                powerScale,
-                vibrationAttributes = VIBRATION_ATTRIBUTES_PIPELINING,
-            )
-        msdlPlayer.playToken(MSDLToken.DRAG_THRESHOLD_INDICATOR_LIMIT, properties)
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+            .setEffectId(SLIDER_EDGE)
+            .setFallbackEffectId(TICK)
+            .setAmplitude(1f.coerceIn(0.01f, 1f))
+            .setVibrationAttributes(VIBRATION_ATTRIBUTES_SLIDER)
+            .build())
     }
 
     /**
@@ -114,7 +118,7 @@ class SliderHapticFeedbackProvider(
         if (!canVibrate) return
 
         // Deliver haptic feedback
-        val powerScale = scaleOnDragTexture(absoluteVelocity, normalizedSliderProgress)
+        val powerScale = normalizedSliderProgress.coerceIn(0.01f, 1f)
         when {
             config.sliderStepSize == 0f -> performContinuousSliderDragVibration(powerScale)
             config.sliderStepSize > 0f -> performDiscreteSliderDragVibration(powerScale)
@@ -156,21 +160,21 @@ class SliderHapticFeedbackProvider(
     }
 
     private fun performDiscreteSliderDragVibration(scale: Float) {
-        val properties =
-            InteractionProperties.DynamicVibrationScale(
-                scale,
-                vibrationAttributes = VIBRATION_ATTRIBUTES_PIPELINING,
-            )
-        msdlPlayer.playToken(MSDLToken.DRAG_INDICATOR_DISCRETE, properties)
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+            .setEffectId(SLIDER_STEP)
+            .setFallbackEffectId(TICK)
+            .setAmplitude(scale.coerceIn(0.01f, 1f))
+            .setVibrationAttributes(VIBRATION_ATTRIBUTES_SLIDER)
+            .build())
     }
 
     private fun performContinuousSliderDragVibration(scale: Float) {
-        val properties =
-            InteractionProperties.DynamicVibrationScale(
-                scale,
-                vibrationAttributes = VIBRATION_ATTRIBUTES_PIPELINING,
-            )
-        msdlPlayer.playToken(MSDLToken.DRAG_INDICATOR_CONTINUOUS, properties)
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+            .setEffectId(SLIDER_STEP)
+            .setFallbackEffectId(TICK)
+            .setAmplitude(scale.coerceIn(0.01f, 1f))
+            .setVibrationAttributes(VIBRATION_ATTRIBUTES_SLIDER)
+            .build())
     }
 
     /**

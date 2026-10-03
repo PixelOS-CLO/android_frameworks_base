@@ -17,6 +17,8 @@
 package com.android.settingslib.widget;
 
 import android.content.Context;
+import android.os.VibrationAttributes;
+import android.os.VibrationExtInfo;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -24,10 +26,14 @@ import androidx.preference.PreferenceViewHolder;
 import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.settingslib.widget.preference.app.R;
+
 /**
  * The SwitchPreference for the pages need to show apps icon.
  */
 public class AppSwitchPreference extends SwitchPreferenceCompat {
+
+    private static final VibrationAttributes VIBRATION_ATTRIBUTES_SWITCH =
+            VibrationAttributes.createForUsage(VibrationAttributes.USAGE_CUSTOM_SWITCH);
 
     public AppSwitchPreference(Context context, AttributeSet attrs, int defStyleAttr,
             int defStyleRes) {
@@ -65,5 +71,18 @@ public class AppSwitchPreference extends SwitchPreferenceCompat {
             final View rootView = switchView.getRootView();
             rootView.setFilterTouchesWhenObscured(true);
         }
+    }
+
+    @Override
+    protected void performClick(View view) {
+        boolean checked = isChecked();
+        super.performClick(view);
+        if (checked == isChecked()) return;
+        view.performHapticFeedbackExt(new VibrationExtInfo.Builder()
+                .setEffectId(VibrationExtInfo.SWITCH_TOGGLE)
+                .setFallbackEffectId(VibrationExtInfo.CLICK)
+                .setVibrationAttributes(VIBRATION_ATTRIBUTES_SWITCH)
+                .build()
+        );
     }
 }

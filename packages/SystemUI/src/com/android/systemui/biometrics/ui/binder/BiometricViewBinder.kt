@@ -16,6 +16,7 @@
 
 package com.android.systemui.biometrics.ui.binder
 
+import com.google.android.msdl.data.model.MSDLToken
 import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Context
@@ -24,6 +25,7 @@ import android.hardware.biometrics.BiometricConstants
 import android.hardware.biometrics.BiometricPrompt
 import android.hardware.face.FaceManager
 import android.util.Log
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -74,6 +76,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import android.os.VibrationAttributes
+import android.os.VibrationExtInfo
+import org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_FINGERPRINT_UNLOCK
+import vendor.sun.hardware.vibratorExt.Effect.CLICK
+import vendor.sun.hardware.vibratorExt.Effect.DOUBLE_CLICK
+import vendor.sun.hardware.vibratorExt.Effect.UNIFIED_ERROR
+import vendor.sun.hardware.vibratorExt.Effect.UNIFIED_SUCCESS
 
 private const val TAG = "BiometricViewBinder"
 
@@ -467,22 +476,34 @@ object BiometricViewBinder {
                 // Play haptics
                 launch {
                     viewModel.hapticsToPlay.collect { haptics ->
-                        when (haptics) {
-                            is PromptViewModel.HapticsToPlay.HapticConstant -> {
-                                if (haptics.flag != null) {
-                                    vibratorHelper.performHapticFeedback(
-                                        view,
-                                        haptics.constant,
-                                        haptics.flag,
-                                    )
-                                } else {
-                                    vibratorHelper.performHapticFeedback(view, haptics.constant)
-                                }
+                        val success = when (haptics) {
+                            is PromptViewModel.HapticsToPlay.HapticConstant -> when (haptics.constant) {
+                                HapticFeedbackConstants.CONFIRM,
+                                HapticFeedbackConstants.BIOMETRIC_CONFIRM -> true
+                                HapticFeedbackConstants.REJECT,
+                                HapticFeedbackConstants.BIOMETRIC_REJECT -> false
+                                else -> null
                             }
-                            is PromptViewModel.HapticsToPlay.MSDL -> {
+                            is PromptViewModel.HapticsToPlay.MSDL -> when (haptics.token) {
+                                MSDLToken.UNLOCK -> true
+                                MSDLToken.FAILURE -> false
+                                else -> null
+                            }
+                            else -> null
+                        }
+                        if (success != null) {
+                            vibratorHelper.performHapticFeedbackExt(view,
+                                VibrationExtInfo.Builder()
+                                    .setEffectId(if (success) UNIFIED_SUCCESS else UNIFIED_ERROR)
+                                    .setFallbackEffectId(if (success) CLICK else DOUBLE_CLICK)
+                                    .setVibrationAttributes(VIBRATION_ATTRIBUTES_FINGERPRINT_UNLOCK)
+                                    .build())
+                        } else when (haptics) {
+                            is PromptViewModel.HapticsToPlay.HapticConstant ->
+                                vibratorHelper.performHapticFeedback(view, haptics.constant)
+                            is PromptViewModel.HapticsToPlay.MSDL ->
                                 msdlPlayer.playToken(haptics.token, haptics.properties)
-                            }
-                            is PromptViewModel.HapticsToPlay.None -> {}
+                            else -> Unit
                         }
                         viewModel.clearHaptics()
                     }

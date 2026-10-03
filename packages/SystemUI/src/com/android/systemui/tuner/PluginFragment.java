@@ -32,7 +32,6 @@ import android.view.View;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.PreferenceViewHolder;
-import androidx.preference.SwitchPreferenceCompat;
 
 import com.android.systemui.Dependency;
 import com.android.systemui.plugins.PluginEnablerImpl;
@@ -46,6 +45,8 @@ import com.android.systemui.shared.plugins.PluginPrefs;
 
 import java.util.List;
 import java.util.Set;
+
+import org.sun.custom.preference.SwitchPreferenceCompat;
 
 public class PluginFragment extends PreferenceFragmentCompat {
 

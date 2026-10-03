@@ -26,6 +26,7 @@ import android.graphics.Region;
 import android.os.IBinder;
 import android.os.RemoteCallback;
 import android.os.RemoteException;
+import android.os.VibrationExtInfo;
 import android.util.Log;
 import android.util.MergedConfiguration;
 import android.view.View.FocusDirection;
@@ -832,5 +833,8 @@ public class WindowlessWindowManager implements IWindowSession {
             return false;
         }
         return true;
+    }
+    @Override
+    public void performHapticFeedbackExt(VibrationExtInfo info) {
     }
 }

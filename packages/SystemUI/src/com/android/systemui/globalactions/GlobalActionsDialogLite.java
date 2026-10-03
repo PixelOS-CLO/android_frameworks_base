@@ -29,6 +29,9 @@ import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.STR
 import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.STRONG_AUTH_REQUIRED_AFTER_USER_LOCKDOWN;
 import static com.android.systemui.shared.system.BlurUtils.isVolumeAndPowerBlurEnabled;
 import static com.android.systemui.util.kotlin.JavaAdapterKt.collectFlow;
+import static org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES;
+import static vendor.sun.hardware.vibratorExt.Effect.BUTTON_CLICK;
+import static vendor.sun.hardware.vibratorExt.Effect.CLICK;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -68,6 +71,7 @@ import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.os.VibrationExtInfo;
 import android.provider.Settings;
 import android.sysprop.TelephonyProperties;
 import android.telecom.TelecomManager;
@@ -213,6 +217,8 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
     private static final int DIALOG_WINDOW_TYPE = TYPE_STATUS_BAR_SUB_PANEL;
 
     @NonNull
+    private final VibratorHelper mVibratorHelper;
+
     private final Context mContext;
     @NonNull
     private final GlobalActionsManager mWindowManagerFuncs;
@@ -436,6 +442,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         mLockPatternUtils = lockPatternUtils;
         mTelephonyListenerManager = telephonyListenerManager;
         mKeyguardStateController = keyguardStateController;
+        mVibratorHelper = vibrator;
         mBroadcastDispatcher = broadcastDispatcher;
         mBroadcastSender = broadcastSender;
         mGlobalSettings = globalSettings;
@@ -1935,6 +1942,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 } else {
                     Log.w(TAG, "Action clicked while mDialog is null.");
                 }
+                doHapticFeedback();
                 item.onPress();
             }
         }
@@ -2024,6 +2032,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 } else {
                     Log.w(TAG, "Action clicked while mDialog is null.");
                 }
+                doHapticFeedback();
                 item.onPress();
             }
         }
@@ -2109,6 +2118,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 } else {
                     Log.w(TAG, "Action clicked while mDialog is null.");
                 }
+                doHapticFeedback();
                 item.onPress();
             }
         }
@@ -3372,4 +3382,12 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                     @Assisted("rescheduleBurnInTimeout") @NonNull Runnable rescheduleBurnInTimeout);
         }
     }
+    private void doHapticFeedback() {
+        mVibratorHelper.vibrateExt(new VibrationExtInfo.Builder()
+                .setEffectId(BUTTON_CLICK)
+                .setFallbackEffectId(CLICK)
+                .setVibrationAttributes(VIBRATION_ATTRIBUTES_MISC_SCENES)
+                .build());
+    }
+
 }

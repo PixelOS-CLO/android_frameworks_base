@@ -131,11 +131,19 @@ final class VibrationStepConductor {
         if (Build.IS_DEBUGGABLE) {
             expectIsVibrationThread(true);
         }
+        if (vibrator instanceof VibratorExtHalWrapper extensionVibrator) {
+            vibrator = extensionVibrator.forAttributes(mVibration.callerInfo.attrs);
+        }
         if (effect instanceof VibrationEffect.VendorEffect vendorEffect) {
             return new PerformVendorEffectVibratorStep(this, startTime, vibrator, vendorEffect,
                     /* pendingVibratorOffDeadline= */ 0);
         }
         if (effect instanceof VibrationEffect.Composed composed) {
+            if (!isInSession && composed.getRepeatIndex() < 0
+                    && VibratorExtEffectMapper.isHapticEffect(mVibration.extensionEffectId)
+                    && vibrator instanceof VibratorExtHalWrapper extensionVibrator) {
+                return new PerformExtVibratorStep(this, startTime, extensionVibrator, composed);
+            }
             return nextVibrateStep(startTime, vibrator, composed, /* segmentIndex= */ 0,
                     /* pendingVibratorOffDeadline= */ 0);
         }

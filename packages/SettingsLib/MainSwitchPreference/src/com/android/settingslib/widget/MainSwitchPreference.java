@@ -42,6 +42,8 @@ public class MainSwitchPreference extends TwoStatePreference implements OnChecke
 
     private final List<OnCheckedChangeListener> mSwitchChangeListeners = new ArrayList<>();
 
+    private boolean mShouldVibrate = true;
+
     public MainSwitchPreference(@NonNull Context context) {
         this(context, null);
     }
@@ -62,6 +64,11 @@ public class MainSwitchPreference extends TwoStatePreference implements OnChecke
         int resId = isExpressive ? R.layout.settingslib_expressive_main_switch_layout
                 : R.layout.settingslib_main_switch_layout;
         setLayoutResource(resId);
+        final android.content.res.TypedArray haptics = context.obtainStyledAttributes(attrs,
+                R.styleable.customPreference, defStyleAttr, defStyleRes);
+        mShouldVibrate = haptics.getBoolean(
+                R.styleable.customPreference_vibrateOnClick, true);
+        haptics.recycle();
     }
 
     @Override
@@ -74,6 +81,7 @@ public class MainSwitchPreference extends TwoStatePreference implements OnChecke
         MainSwitchBar mainSwitchBar = holder.itemView.requireViewById(
                 R.id.settingslib_main_switch_bar);
         mainSwitchBar.setTitle(getTitle());
+        mainSwitchBar.setShouldVibrate(mShouldVibrate);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             mainSwitchBar.setSummary(getSummary());
         }

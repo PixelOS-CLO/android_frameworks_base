@@ -141,7 +141,11 @@ final class SetAmplitudeVibratorStep extends AbstractComposedVibratorStep {
                             + duration + "ms");
         }
         int stepId = conductor.nextVibratorCallbackStepId(getVibratorId());
-        long vibratorOnResult = vibrator.on(getVibration().id, stepId, duration);
+        long vibratorOnResult = vibrator instanceof VibratorExtHalWrapper extensionVibrator
+                && !conductor.isInSession
+                ? extensionVibrator.onDuration(getVibration().id, stepId, duration, amplitude,
+                        getVibration().callerInfo.attrs.getUsage(), getVibration().extensionEffectId)
+                : vibrator.on(getVibration().id, stepId, duration);
         handleVibratorOnResult(vibratorOnResult);
         getVibration().stats.reportVibratorOn(vibratorOnResult);
         if (vibratorOnResult > 0) {

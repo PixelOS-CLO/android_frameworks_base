@@ -211,6 +211,7 @@ import android.os.MessageQueue;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.VibrationExtInfo;
 import android.os.ServiceManager;
 import android.os.StrictMode;
 import android.os.SystemClock;
@@ -10659,6 +10660,15 @@ public final class ViewRootImpl implements ViewParent,
     /**
      * {@inheritDoc}
      */
+    @Override
+    public void performHapticFeedbackExt(VibrationExtInfo info) {
+        try {
+            mWindowSession.performHapticFeedbackExt(info);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     @Override
     public boolean performHapticFeedback(int effectId, @VibrationAttributes.Usage int usage,
             int flags, int privFlags) {

@@ -21,6 +21,8 @@ import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.graphics.Point
 import android.graphics.Rect
+import android.os.VibrationAttributes
+import android.os.VibrationExtInfo
 import android.view.HapticFeedbackConstants
 import android.view.InputDevice
 import android.view.MotionEvent
@@ -78,6 +80,9 @@ import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_FINGERPRINT_UNLOCK
+import vendor.sun.hardware.vibratorExt.Effect.CLICK
+import vendor.sun.hardware.vibratorExt.Effect.UNIFIED_SUCCESS
 
 /** Bind keyguard UI to run whenever the keyguard view is attached. */
 object KeyguardRootViewBinder {
@@ -138,17 +143,12 @@ object KeyguardRootViewBinder {
                     if (deviceEntryHapticsInteractor != null && vibratorHelper != null) {
                         launch {
                             deviceEntryHapticsInteractor.playSuccessHapticOnDeviceEntry.collect {
-                                if (msdlFeedback()) {
-                                    msdlPlayer?.playToken(
-                                        MSDLToken.UNLOCK,
-                                        authInteractionProperties,
-                                    )
-                                } else {
-                                    vibratorHelper.performHapticFeedback(
-                                        view,
-                                        HapticFeedbackConstants.BIOMETRIC_CONFIRM,
-                                    )
-                                }
+                                vibratorHelper.performHapticFeedbackExt(view,
+                                    VibrationExtInfo.Builder()
+                                        .setEffectId(UNIFIED_SUCCESS)
+                                        .setFallbackEffectId(CLICK)
+                                        .setVibrationAttributes(VIBRATION_ATTRIBUTES_FINGERPRINT_UNLOCK)
+                                        .build())
                             }
                         }
 
@@ -157,7 +157,7 @@ object KeyguardRootViewBinder {
                                 if (msdlFeedback()) {
                                     msdlPlayer?.playToken(
                                         MSDLToken.FAILURE,
-                                        authInteractionProperties,
+                                        authErrorInteractionProperties,
                                     )
                                 } else {
                                     vibratorHelper.performHapticFeedback(
@@ -551,6 +551,11 @@ object KeyguardRootViewBinder {
     private val deviceEntryIcon = R.id.device_entry_icon_view
     private val nsslPlaceholderId = R.id.nssl_placeholder
     private val authInteractionProperties = AuthInteractionProperties()
+    private val authErrorInteractionProperties = AuthInteractionProperties(
+        VibrationAttributes.Builder(authInteractionProperties.vibrationAttributes)
+            .setFlags(VibrationAttributes.FLAG_USE_PLATFORM_EFFECT)
+            .build()
+    )
     private val authUiIds = setOf(deviceEntryIcon, indicationArea)
 
     private const val AOD_ICONS_APPEAR_DURATION: Long = 200

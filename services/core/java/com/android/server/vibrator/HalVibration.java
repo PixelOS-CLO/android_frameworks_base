@@ -36,6 +36,15 @@ import java.util.function.IntFunction;
  */
 final class HalVibration extends Vibration {
 
+    // Assigned before the session is submitted to VibrationThread.
+    int extensionEffectId = VibratorExtEffectMapper.NONE;
+
+    float extensionAmplitude = 1f;
+
+    float getExtensionAmplitude() {
+        return Math.max(0f, Math.min(1f, VibrationEffect.scale(extensionAmplitude, mScaleFactor) * mAdaptiveScale));
+    }
+
     // TODO(b/409002423): remove this map once remove_hidl_support flag removed
     public final SparseArray<VibrationEffect> mFallbacks = new SparseArray<>();
 
@@ -161,6 +170,12 @@ final class HalVibration extends Vibration {
     /** Returns true if this vibration can pipeline with the specified one. */
     public boolean canPipelineWith(HalVibration vib,
             @Nullable SparseArray<VibratorInfo> vibratorInfos, int durationThresholdMs) {
+        // The extension reports its real duration only when playback starts. Do not
+        // pipeline using the duration of the retained platform fallback effect.
+        if (extensionEffectId != VibratorExtEffectMapper.NONE
+                || vib.extensionEffectId != VibratorExtEffectMapper.NONE) {
+            return false;
+        }
         long effectDuration = vibratorInfos != null
                 ? mEffectToPlay.getDuration(vibratorInfos)
                 : mEffectToPlay.getDuration();

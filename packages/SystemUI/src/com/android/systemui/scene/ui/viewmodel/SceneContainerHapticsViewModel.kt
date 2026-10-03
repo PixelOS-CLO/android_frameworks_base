@@ -16,6 +16,11 @@
 
 package com.android.systemui.scene.ui.viewmodel
 
+import android.os.VibrationExtInfo
+import com.android.systemui.statusbar.VibratorHelper
+import org.sun.os.CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES
+import vendor.sun.hardware.vibratorExt.Effect.EXPAND_PANEL
+
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.android.compose.animation.scene.ObservableTransitionState
@@ -42,6 +47,7 @@ constructor(
     sceneInteractor: SceneInteractor,
     shadeInteractor: ShadeInteractor,
     private val msdlPlayer: MSDLPlayer,
+    private val vibratorHelper: VibratorHelper,
 ) : ExclusiveActivatable() {
 
     /** Should haptics be played by pulling down the shade */
@@ -65,18 +71,24 @@ constructor(
         return object : ContainerRevealHaptics {
             override fun onRevealThresholdCrossed(revealed: Boolean) {
                 if (revealed) {
-                    hapticFeedback.performHapticFeedback(
-                        HapticFeedbackType.GestureThresholdActivate
-                    )
+                    playShadeHaptic()
                 }
             }
         }
     }
 
+    private fun playShadeHaptic() {
+        vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+            .setEffectId(EXPAND_PANEL)
+            .setFallbackEffectId(VibrationExtInfo.CLICK)
+            .setVibrationAttributes(VIBRATION_ATTRIBUTES_MISC_SCENES)
+            .build())
+    }
+
     private suspend fun playShadePullHaptics() {
         isShadePullHapticsRequired
             .filter { it }
-            .collect { msdlPlayer.playToken(MSDLToken.SWIPE_THRESHOLD_INDICATOR) }
+            .collect { playShadeHaptic() }
     }
 
     private fun ObservableTransitionState.isValidForShadePullHaptics(): Boolean {

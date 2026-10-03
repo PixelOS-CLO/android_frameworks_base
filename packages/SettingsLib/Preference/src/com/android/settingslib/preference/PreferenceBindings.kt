@@ -17,6 +17,8 @@
 package com.android.settingslib.preference
 
 import android.content.Context
+import android.view.HapticFeedbackConstants
+import android.view.View
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.SwitchPreferenceCompat
@@ -54,7 +56,19 @@ interface BooleanValuePreferenceBinding : PreferenceBinding {
 /** A boolean value type preference associated with [SwitchPreferenceCompat]. */
 interface SwitchPreferenceBinding : BooleanValuePreferenceBinding {
 
-    override fun createWidget(context: Context): Preference = SwitchPreferenceCompat(context)
+    override fun createWidget(context: Context): Preference =
+        object : SwitchPreferenceCompat(context) {
+            override fun performClick(view: View) {
+                val checked = isChecked
+                super.performClick(view)
+                if (checked != isChecked) {
+                    view.performHapticFeedback(
+                        if (isChecked) HapticFeedbackConstants.TOGGLE_ON
+                        else HapticFeedbackConstants.TOGGLE_OFF
+                    )
+                }
+            }
+        }
 
     companion object {
         @JvmStatic val INSTANCE = object : SwitchPreferenceBinding {}

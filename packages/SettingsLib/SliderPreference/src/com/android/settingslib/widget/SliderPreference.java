@@ -16,16 +16,17 @@
 
 package com.android.settingslib.widget;
 
-import static android.view.HapticFeedbackConstants.CLOCK_TICK;
 
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -74,7 +75,9 @@ public class SliderPreference extends Preference {
     private int mIconEndId;
     private int mIconStartContentDescriptionId;
     private int mIconEndContentDescriptionId;
-    private int mHapticFeedbackMode = HAPTIC_FEEDBACK_MODE_NONE;
+    private int mHapticFeedbackMode = HAPTIC_FEEDBACK_MODE_ON_TICKS;
+    private long mLastHapticTime;
+    private float mLastHapticValue = Float.NaN;
     private boolean mTickVisible = false;
     private boolean mAdjustable;
     private boolean mTrackingTouch;
@@ -158,6 +161,21 @@ public class SliderPreference extends Preference {
             if (mExtraChangeListener != null) {
                 mExtraChangeListener.onValueChange(slider, value, fromUser);
             }
+            if (fromUser && value == slider.getValue() && value != mLastHapticValue) {
+                final boolean atEdge = value == slider.getValueFrom()
+                        || value == slider.getValueTo();
+                final long now = SystemClock.uptimeMillis();
+                if ((mHapticFeedbackMode == HAPTIC_FEEDBACK_MODE_ON_TICKS
+                        && (atEdge || now - mLastHapticTime >= 25))
+                        || (mHapticFeedbackMode == HAPTIC_FEEDBACK_MODE_ON_ENDS && atEdge)) {
+                    if (slider.performHapticFeedback(atEdge
+                            ? HapticFeedbackConstants.SEGMENT_TICK
+                            : HapticFeedbackConstants.SEGMENT_FREQUENT_TICK)) {
+                        mLastHapticTime = now;
+                    }
+                }
+            }
+            mLastHapticValue = slider.getValue();
         }
     };
 
@@ -659,16 +677,7 @@ public class SliderPreference extends Preference {
         if (sliderValue != mSliderValue) {
             if (callChangeListener(sliderValue)) {
                 setValueInternal(sliderValue, false);
-                switch (mHapticFeedbackMode) {
-                    case HAPTIC_FEEDBACK_MODE_ON_TICKS:
-                        slider.performHapticFeedback(CLOCK_TICK);
-                        break;
-                    case HAPTIC_FEEDBACK_MODE_ON_ENDS:
-                        if (mSliderValue == mMax || mSliderValue == mMin) {
-                            slider.performHapticFeedback(CLOCK_TICK);
-                        }
-                        break;
-                }
+
             } else {
                 slider.setValue(mSliderValue);
             }

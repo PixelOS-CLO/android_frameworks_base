@@ -140,7 +140,8 @@ public class MainSwitchBar extends LinearLayout implements OnCheckedChangeListen
         if (callPreChangeListener()) {
             mSwitch.performClick();
         }
-        return super.performClick();
+        boolean handled = super.performClick();
+        return handled;
     }
 
     protected boolean callPreChangeListener() {
@@ -200,6 +201,13 @@ public class MainSwitchBar extends LinearLayout implements OnCheckedChangeListen
             params.setMarginStart(iconSpaceReserved ? iconSpace : 0);
             mTextView.setLayoutParams(params);
         }
+    }
+
+    /**
+     * Set whether to vibrate on click
+     */
+    public void setShouldVibrate(boolean vibrate) {
+        mSwitch.setHapticFeedbackEnabled(vibrate);
     }
 
     /**

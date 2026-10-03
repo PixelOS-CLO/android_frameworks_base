@@ -23,6 +23,7 @@ import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
 import android.annotation.TestApi;
 import android.media.AudioAttributes;
 
@@ -43,6 +44,7 @@ public final class VibrationAttributes implements Parcelable {
             USAGE_CLASS_ALARM,
             USAGE_CLASS_FEEDBACK,
             USAGE_CLASS_MEDIA,
+            USAGE_CLASS_CUSTOM,
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface UsageClass {}
@@ -59,6 +61,16 @@ public final class VibrationAttributes implements Parcelable {
             USAGE_PHYSICAL_EMULATION,
             USAGE_RINGTONE,
             USAGE_TOUCH,
+            USAGE_CUSTOM_SWITCH,
+            USAGE_CUSTOM_SLIDER,
+            USAGE_CUSTOM_QS_TILE,
+            USAGE_CUSTOM_PREVIEW_NOTIFICATION,
+            USAGE_CUSTOM_PREVIEW_ALARM_CALL,
+            USAGE_CUSTOM_OFF_SCREEN_GESTURE,
+            USAGE_CUSTOM_MISC_SCENES,
+            USAGE_CUSTOM_FINGERPRINT_UNLOCK,
+            USAGE_CUSTOM_FACE_UNLOCK,
+            USAGE_CUSTOM_BACK_GESTURE_DRAG,
             USAGE_IME_FEEDBACK,
             USAGE_GESTURE_INPUT,
     })
@@ -89,6 +101,29 @@ public final class VibrationAttributes implements Parcelable {
      * soundtrack, game or animations.
      */
     public static final int USAGE_CLASS_MEDIA = 0x3;
+
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CLASS_CUSTOM = 4;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_BACK_GESTURE_DRAG = 20;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_FACE_UNLOCK = 36;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_FINGERPRINT_UNLOCK = 52;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_MISC_SCENES = 68;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_OFF_SCREEN_GESTURE = 84;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_PREVIEW_ALARM_CALL = 100;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_PREVIEW_NOTIFICATION = 116;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_QS_TILE = 132;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_SLIDER = 148;
+    @SuppressLint("UnflaggedApi")
+    public static final int USAGE_CUSTOM_SWITCH = 164;
 
     /**
      * Mask for vibration usage class value.
@@ -176,6 +211,7 @@ public final class VibrationAttributes implements Parcelable {
             FLAG_BYPASS_USER_VIBRATION_INTENSITY_OFF,
             FLAG_INVALIDATE_SETTINGS_CACHE,
             FLAG_PIPELINED_EFFECT,
+            FLAG_USE_PLATFORM_EFFECT,
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Flag{}
@@ -229,12 +265,19 @@ public final class VibrationAttributes implements Parcelable {
     public static final int FLAG_PIPELINED_EFFECT = 1 << 3;
 
     /**
+     * Keeps the requested effect on the platform vibrator.
+     * @hide
+     */
+    public static final int FLAG_USE_PLATFORM_EFFECT = 1 << 4;
+
+    /**
      * All flags supported by vibrator service, update it when adding new flag.
      * @hide
      */
     public static final int FLAG_ALL_SUPPORTED =
             FLAG_BYPASS_INTERRUPTION_POLICY | FLAG_BYPASS_USER_VIBRATION_INTENSITY_OFF
-                    | FLAG_INVALIDATE_SETTINGS_CACHE | FLAG_PIPELINED_EFFECT;
+                    | FLAG_INVALIDATE_SETTINGS_CACHE | FLAG_PIPELINED_EFFECT
+                    | FLAG_USE_PLATFORM_EFFECT;
 
     /** Creates a new {@link VibrationAttributes} instance with given usage. */
     public static @NonNull VibrationAttributes createForUsage(@Usage int usage) {
@@ -411,6 +454,26 @@ public final class VibrationAttributes implements Parcelable {
                 return "PHYSICAL_EMULATION";
             case USAGE_HARDWARE_FEEDBACK:
                 return "HARDWARE_FEEDBACK";
+            case USAGE_CUSTOM_BACK_GESTURE_DRAG:
+                return "BACK_GESTURE_DRAG";
+            case USAGE_CUSTOM_FACE_UNLOCK:
+                return "FACE_UNLOCK";
+            case USAGE_CUSTOM_FINGERPRINT_UNLOCK:
+                return "FINGERPRINT_UNLOCK";
+            case USAGE_CUSTOM_MISC_SCENES:
+                return "MISC_SCENES";
+            case USAGE_CUSTOM_OFF_SCREEN_GESTURE:
+                return "OFF_SCREEN_GESTURE";
+            case USAGE_CUSTOM_PREVIEW_ALARM_CALL:
+                return "PREVIEW_ALARM_CALL";
+            case USAGE_CUSTOM_PREVIEW_NOTIFICATION:
+                return "PREVIEW_NOTIFICATION";
+            case USAGE_CUSTOM_QS_TILE:
+                return "QS_TILE";
+            case USAGE_CUSTOM_SLIDER:
+                return "SLIDER";
+            case USAGE_CUSTOM_SWITCH:
+                return "SWITCH";
             case USAGE_IME_FEEDBACK:
                 return "IME";
             case USAGE_GESTURE_INPUT:

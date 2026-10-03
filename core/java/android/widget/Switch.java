@@ -48,6 +48,7 @@ import android.util.AttributeSet;
 import android.util.FloatProperty;
 import android.util.MathUtils;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.RemotableViewMethod;
 import android.view.SoundEffectConstants;
@@ -1206,6 +1207,10 @@ public class Switch extends CompoundButton {
         }
         // Always call setChecked so that the thumb is moved back to the correct edge
         setChecked(newState);
+        if (oldState != isChecked()) {
+            performHapticFeedback(isChecked() ? HapticFeedbackConstants.TOGGLE_ON
+                    : HapticFeedbackConstants.TOGGLE_OFF);
+        }
         cancelSuperTouch(ev);
     }
 

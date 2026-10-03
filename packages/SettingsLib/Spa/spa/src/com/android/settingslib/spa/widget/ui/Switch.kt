@@ -27,8 +27,10 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import com.android.settingslib.spa.framework.compose.contentDescription
 import com.android.settingslib.spa.framework.theme.isSpaExpressiveEnabled
+import com.android.settingslib.spa.framework.util.wrapOnSwitchWithHaptic
 import com.android.settingslib.spa.framework.util.wrapOnSwitchWithLog
 
 @Composable
@@ -42,7 +44,9 @@ internal fun SettingsSwitch(
     if (checked != null) {
         Switch(
             checked = checked,
-            onCheckedChange = wrapOnSwitchWithLog(onCheckedChange),
+            onCheckedChange = wrapOnSwitchWithLog(
+                wrapOnSwitchWithHaptic(LocalView.current, onCheckedChange)
+            ),
             modifier = Modifier.contentDescription(contentDescription),
             enabled = changeable(),
             interactionSource = interactionSource,

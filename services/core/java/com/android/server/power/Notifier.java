@@ -16,6 +16,9 @@
 
 package com.android.server.power;
 
+import static vendor.sun.hardware.vibratorExt.Effect.DOUBLE_CLICK;
+import static vendor.sun.hardware.vibratorExt.Effect.PLUG_IN;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
@@ -53,7 +56,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.os.VibrationAttributes;
-import android.os.VibrationEffect;
+import android.os.VibrationExtInfo;
 import android.os.Vibrator;
 import android.os.WorkSource;
 import android.os.WorkSource.WorkChain;
@@ -126,17 +129,6 @@ public class Notifier {
     private static final int MSG_WIRED_CHARGING_STARTED = 6;
     private static final int MSG_SCREEN_POLICY = 7;
 
-    private static final long[] CHARGING_VIBRATION_TIME = {
-            40, 40, 40, 40, 40, 40, 40, 40, 40, // ramp-up sampling rate = 40ms
-            40, 40, 40, 40, 40, 40, 40 // ramp-down sampling rate = 40ms
-    };
-    private static final int[] CHARGING_VIBRATION_AMPLITUDE = {
-            1, 4, 11, 25, 44, 67, 91, 114, 123, // ramp-up amplitude (from 0 to 50%)
-            103, 79, 55, 34, 17, 7, 2 // ramp-up amplitude
-    };
-    private static final VibrationEffect CHARGING_VIBRATION_EFFECT =
-            VibrationEffect.createWaveform(CHARGING_VIBRATION_TIME, CHARGING_VIBRATION_AMPLITUDE,
-                    -1);
     private static final VibrationAttributes HARDWARE_FEEDBACK_VIBRATION_ATTRIBUTES =
             VibrationAttributes.createForUsage(VibrationAttributes.USAGE_HARDWARE_FEEDBACK);
 
@@ -1275,9 +1267,12 @@ public class Notifier {
             final boolean vibrate = Settings.Secure.getIntForUser(mContext.getContentResolver(),
                     Settings.Secure.CHARGING_VIBRATION_ENABLED, 1, userId) != 0;
             if (vibrate) {
-                mVibrator.vibrate(Process.SYSTEM_UID, mContext.getOpPackageName(),
-                        CHARGING_VIBRATION_EFFECT, /* reason= */ "Charging started",
-                        HARDWARE_FEEDBACK_VIBRATION_ATTRIBUTES);
+                mVibrator.vibrateExt(new VibrationExtInfo.Builder()
+                        .setEffectId(PLUG_IN)
+                        .setFallbackEffectId(DOUBLE_CLICK)
+                        .setReason("Charging started")
+                        .setVibrationAttributes(HARDWARE_FEEDBACK_VIBRATION_ATTRIBUTES)
+                        .build());
             }
 
             // play sound

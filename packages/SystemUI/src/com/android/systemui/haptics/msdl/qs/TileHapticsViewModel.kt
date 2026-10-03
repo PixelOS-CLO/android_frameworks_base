@@ -16,13 +16,17 @@
 
 package com.android.systemui.haptics.msdl.qs
 
+import android.os.VibrationAttributes
+import android.os.VibrationExtInfo
 import android.service.quicksettings.Tile
 import com.android.systemui.animation.Expandable
 import com.android.systemui.lifecycle.ExclusiveActivatable
 import com.android.systemui.qs.panels.ui.viewmodel.TileViewModel
+import com.android.systemui.statusbar.VibratorHelper
 import com.android.systemui.util.kotlin.mapDirect
 import com.android.systemui.util.kotlin.pairwise
 import com.google.android.msdl.data.model.MSDLToken
+import com.google.android.msdl.domain.InteractionProperties
 import com.google.android.msdl.domain.MSDLPlayer
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -33,14 +37,24 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.transform
+import org.sun.os.CustomVibrationAttributes
+import vendor.sun.hardware.vibratorExt.Effect
 
 /** A view-model to trigger haptic feedback on Quick Settings tiles */
 class TileHapticsViewModel
 @AssistedInject
 constructor(
     private val msdlPlayer: MSDLPlayer,
+    private val vibratorHelper: VibratorHelper,
     @Assisted private val tileViewModel: TileViewModel,
 ) : ExclusiveActivatable() {
+
+    private val toggleInteractionProperties = object : InteractionProperties {
+        override val vibrationAttributes =
+            VibrationAttributes.Builder(CustomVibrationAttributes.VIBRATION_ATTRIBUTES_QS_TILE)
+                .setFlags(VibrationAttributes.FLAG_USE_PLATFORM_EFFECT)
+                .build()
+    }
 
     private val tileInteractionState = MutableStateFlow(TileInteractionState.IDLE)
     private val tileAnimationState = MutableStateFlow(TileAnimationState.IDLE)
@@ -95,7 +109,15 @@ constructor(
                     TileHapticsState.NO_HAPTICS -> null
                 }
             tokenToPlay?.let {
-                msdlPlayer.playToken(it)
+                if (hapticsState == TileHapticsState.LONG_PRESS) {
+                    vibratorHelper.vibrateExt(VibrationExtInfo.Builder()
+                        .setEffectId(Effect.BUTTON_CLICK)
+                        .setFallbackEffectId(VibrationExtInfo.CLICK)
+                        .setVibrationAttributes(CustomVibrationAttributes.VIBRATION_ATTRIBUTES_QS_TILE)
+                        .build())
+                } else {
+                    msdlPlayer.playToken(it, toggleInteractionProperties)
+                }
                 resetStates()
             }
         }

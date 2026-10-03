@@ -16,6 +16,10 @@
 
 package com.android.systemui.statusbar.notification.footer.ui.viewbinder
 
+import android.os.VibrationExtInfo
+import org.sun.os.CustomVibrationAttributes
+import vendor.sun.hardware.vibratorExt.Effect
+
 import android.view.View
 import androidx.lifecycle.lifecycleScope
 import com.android.app.tracing.coroutines.launchTraced as launch
@@ -89,7 +93,14 @@ object FooterViewBinder {
         launch {
             viewModel.clearAllButton.isVisible.collect { isVisible ->
                 if (isVisible.value) {
-                    footer.setClearAllButtonClickListener(clearAllNotifications)
+                    footer.setClearAllButtonClickListener { view ->
+                        view.performHapticFeedbackExt(VibrationExtInfo.Builder()
+                            .setEffectId(Effect.CLEAR_ALL_NOTIFICATION)
+                            .setFallbackEffectId(VibrationExtInfo.CLICK)
+                            .setVibrationAttributes(CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES)
+                            .build())
+                        clearAllNotifications.onClick(view)
+                    }
                 } else {
                     // When the button isn't visible, it also shouldn't react to clicks. This is
                     // necessary because when the clear all button is not visible, it's actually
@@ -118,6 +129,11 @@ object FooterViewBinder {
                 cujType = InteractionJankMonitor.CUJ_SHADE_APP_LAUNCH_FROM_HISTORY_BUTTON
             )
         val onClickListener = { view: View ->
+            view.performHapticFeedbackExt(VibrationExtInfo.Builder()
+                .setEffectId(Effect.BUTTON_CLICK)
+                .setFallbackEffectId(VibrationExtInfo.CLICK)
+                .setVibrationAttributes(CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES)
+                .build())
             notificationActivityStarter.startSettingsIntent(view, settingsIntent)
         }
         footer.setSettingsButtonClickListener(onClickListener)
@@ -140,6 +156,11 @@ object FooterViewBinder {
                 cujType = InteractionJankMonitor.CUJ_SHADE_APP_LAUNCH_FROM_HISTORY_BUTTON
             )
         val onClickListener = { view: View ->
+            view.performHapticFeedbackExt(VibrationExtInfo.Builder()
+                .setEffectId(Effect.BUTTON_CLICK)
+                .setFallbackEffectId(VibrationExtInfo.CLICK)
+                .setVibrationAttributes(CustomVibrationAttributes.VIBRATION_ATTRIBUTES_MISC_SCENES)
+                .build())
             notificationActivityStarter.startSettingsIntent(view, settingsIntent)
         }
         footer.setHistoryButtonClickListener(onClickListener)

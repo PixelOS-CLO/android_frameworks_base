@@ -1,0 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: The SunOS Project
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+android_library {
+    name: "SettingsLibHapticSwitchPreference",
+    srcs: ["src/**/*.java"],
+    defaults: ["SettingsLibApexDefaults"],
+    sdk_version: "current",
+    min_sdk_version: "23",
+    static_libs: ["androidx.preference_preference"],
+}

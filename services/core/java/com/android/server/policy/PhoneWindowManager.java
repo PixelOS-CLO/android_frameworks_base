@@ -187,6 +187,7 @@ import android.os.Trace;
 import android.os.UEventObserver;
 import android.os.UserHandle;
 import android.os.VibrationAttributes;
+import android.os.VibrationExtInfo;
 import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -199,7 +200,6 @@ import android.service.vr.IPersistentVrStateCallbacks;
 import android.speech.RecognizerIntent;
 import android.telecom.TelecomManager;
 import android.text.TextUtils;
-import android.util.ArraySet;
 import android.util.Log;
 import android.util.MathUtils;
 import android.util.MutableBoolean;
@@ -5076,6 +5076,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             case KeyEvent.KEYCODE_ASSIST: {
                 final boolean longPressed = event.getRepeatCount() > 0;
                 if (down && !longPressed) {
+                    if (isUserSetupComplete()) {
+                        performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK,
+                                "Assist - Press");
+                    }
                     Message msg = mHandler.obtainMessage(MSG_LAUNCH_ASSIST, event.getDeviceId(),
                             0 /* unused */, event.getEventTime() /* eventTime */);
                     msg.setAsynchronous(true);
@@ -7183,5 +7187,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private void takeScreenshot(int source)
     {
         mScreenshotHelper.takeScreenshot(source, mHandler, null);
+    }
+    @Override
+    public void performHapticFeedbackExt(int uid, String packageName, VibrationExtInfo info) {
+        mVibrator.vibrateExt(uid, packageName, info.getEffectId(), info.getFallbackEffectId(),
+                info.getAmplitude(), info.getReason(), info.getVibrationAttributes());
     }
 }

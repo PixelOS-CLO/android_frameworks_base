@@ -158,6 +158,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.Trace;
 import android.os.VibrationAttributes;
+import android.os.VibrationExtInfo;
 import android.os.vibrator.HapticFeedbackRequest;
 import android.service.credentials.CredentialProviderService;
 import android.sysprop.DisplayProperties;
@@ -29460,6 +29461,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
         return false;
     }
 
+    @SuppressLint("UnflaggedApi")
+    public void performHapticFeedbackExt(@NonNull VibrationExtInfo info) {
+        if (mAttachInfo == null || !isHapticFeedbackEnabled()) return;
+        mAttachInfo.mRootCallbacks.performHapticFeedbackExt(info);
+    }
+
     private int computeHapticFeedbackPrivateFlags() {
         int privFlags = 0;
         if (mAttachInfo.mViewRootImpl != null
@@ -32641,6 +32648,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
         interface Callbacks {
             void playSoundEffect(int effectId);
+            void performHapticFeedbackExt(VibrationExtInfo info);
 
             boolean performHapticFeedback(int effectId,
                     @VibrationAttributes.Usage int usage,

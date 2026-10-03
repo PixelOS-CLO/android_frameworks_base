@@ -79,6 +79,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.sun.server.vibrator.CustomVibrationSettings;
+
 /** Controls all the system settings related to vibration. */
 final class VibrationSettings {
     private static final String TAG = "VibrationSettings";
@@ -425,7 +427,10 @@ final class VibrationSettings {
                 return Status.IGNORED_FROM_VIRTUAL_DEVICE;
             }
 
-            if (mBatterySaverMode && !BATTERY_SAVER_USAGE_ALLOWLIST.contains(usage)) {
+            if (mBatterySaverMode
+                    && CustomVibrationSettings.getInstance()
+                            .isLowPowerDisableVibration()
+                    && !BATTERY_SAVER_USAGE_ALLOWLIST.contains(usage)) {
                 return Status.IGNORED_FOR_POWER;
             }
 
