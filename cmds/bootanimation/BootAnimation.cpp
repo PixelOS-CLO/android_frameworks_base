@@ -513,6 +513,7 @@ status_t BootAnimation::initDisplaysAndSurfaces() {
         configureDisplayAndLayerStack(display, ui::LayerStack::fromValue(displayIdx));
         display.surface = display.surfaceControl->getSurface();
         display.eglSurface = eglCreateWindowSurface(mEgl, config, display.surface.get(), nullptr);
+        display.surface->setScalingMode(NATIVE_WINDOW_SCALING_MODE_SCALE_TO_WINDOW);
 
         EGLint w, h;
         eglQuerySurface(mEgl, display.eglSurface, EGL_WIDTH, &w);
@@ -630,6 +631,7 @@ void BootAnimation::resizeSurface(int newWidth, int newHeight, Display& display)
     display.surfaceControl->updateDefaultBufferSize(display.width, display.height);
     EGLConfig config = getEglConfig(mEgl);
     EGLSurface eglSurface = eglCreateWindowSurface(mEgl, config, display.surface.get(), nullptr);
+    display.surface->setScalingMode(NATIVE_WINDOW_SCALING_MODE_SCALE_TO_WINDOW);
     if (eglMakeCurrent(mEgl, eglSurface, eglSurface, mEglContext) == EGL_FALSE) {
         SLOGE("Can't make the new eglSurface current. Error %d", eglGetError());
         return;
