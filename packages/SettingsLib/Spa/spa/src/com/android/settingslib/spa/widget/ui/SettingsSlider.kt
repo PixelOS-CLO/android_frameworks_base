@@ -16,15 +16,20 @@
 
 package com.android.settingslib.spa.widget.ui
 
+import android.os.SystemClock
+import android.view.HapticFeedbackConstants
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import com.android.settingslib.spa.framework.theme.surfaceTone
 import kotlin.math.roundToInt
 
@@ -38,11 +43,27 @@ fun SettingsSlider(
     showSteps: Boolean = false,
 ) {
     var sliderPosition by rememberSaveable { mutableStateOf(initValue.toFloat()) }
+    var lastHapticTime by remember { mutableLongStateOf(0L) }
+    val view = LocalView.current
     Slider(
         value = sliderPosition,
         onValueChange = {
+            val previous = sliderPosition.roundToInt()
             sliderPosition = it
-            onValueChange?.invoke(sliderPosition.roundToInt())
+            val value = it.roundToInt()
+            onValueChange?.invoke(value)
+            if (value != previous) {
+                val atEdge = value == valueRange.first || value == valueRange.last
+                val now = SystemClock.uptimeMillis()
+                if (atEdge || now - lastHapticTime >= 25) {
+                    if (view.performHapticFeedback(
+                        if (atEdge) HapticFeedbackConstants.SEGMENT_TICK
+                        else HapticFeedbackConstants.SEGMENT_FREQUENT_TICK
+                    )) {
+                        lastHapticTime = now
+                    }
+                }
+            }
         },
         modifier = modifier,
         valueRange = valueRange.first.toFloat()..valueRange.last.toFloat(),

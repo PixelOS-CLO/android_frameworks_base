@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.AirplanemodeActive
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -35,6 +36,7 @@ import com.android.settingslib.spa.framework.theme.SettingsTheme
 import com.android.settingslib.spa.framework.util.wrapOnSwitchWithLog
 import com.android.settingslib.spa.widget.ui.SettingsIcon
 import com.android.settingslib.spa.widget.ui.SettingsSwitch
+import com.android.settingslib.spa.framework.util.wrapOnSwitchWithHaptic
 
 /**
  * The widget model for [SwitchPreference] widget.
@@ -119,7 +121,8 @@ internal fun InternalSwitchPreference(
     onCheckedChange: ((newChecked: Boolean) -> Unit)?,
 ) {
     val indication = LocalIndication.current
-    val onChangeWithLog = wrapOnSwitchWithLog(onCheckedChange)
+    val onChangeWithHaptic = wrapOnSwitchWithHaptic(LocalView.current, onCheckedChange)
+    val onChangeWithLog = wrapOnSwitchWithLog(onChangeWithHaptic)
     val interactionSource = remember { MutableInteractionSource() }
     val localModifier =
         if (checked != null && onChangeWithLog != null) {
