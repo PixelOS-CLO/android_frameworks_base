@@ -23,6 +23,11 @@ sealed interface HapticSlider {
 
     class SeekBar(val seekBar: android.widget.SeekBar) : HapticSlider {
 
+        init {
+            // Haptics are provided by the slider plugin.
+            seekBar.setAutomaticHapticFeedbackEnabled(false)
+        }
+
         override val min: Float
             get() = seekBar.min.toFloat()
 

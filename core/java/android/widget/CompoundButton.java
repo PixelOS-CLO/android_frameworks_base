@@ -35,6 +35,7 @@ import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.RemotableViewMethod;
 import android.view.SoundEffectConstants;
 import android.view.ViewDebug;
@@ -143,6 +144,7 @@ public abstract class CompoundButton extends Button implements Checkable {
 
     @Override
     public boolean performClick() {
+        final boolean checked = isChecked();
         toggle();
 
         final boolean handled = super.performClick();
@@ -152,6 +154,10 @@ public abstract class CompoundButton extends Button implements Checkable {
             playSoundEffect(SoundEffectConstants.CLICK);
         }
 
+        if (checked != isChecked()) {
+            performHapticFeedback(isChecked() ? HapticFeedbackConstants.TOGGLE_ON
+                    : HapticFeedbackConstants.TOGGLE_OFF);
+        }
         return handled;
     }
 
