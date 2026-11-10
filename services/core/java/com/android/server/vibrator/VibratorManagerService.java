@@ -194,6 +194,7 @@ public class VibratorManagerService extends IVibratorManagerService.Stub {
 
     @VisibleForTesting
     final VibrationSettings mVibrationSettings;
+    private final RichTapVibratorService mRichTapVibratorService;
     private final VibrationConfig mVibrationConfig;
     private final VibrationScaler mVibrationScaler;
     private final VibratorControlService mVibratorControlService;
@@ -336,6 +337,7 @@ public class VibratorManagerService extends IVibratorManagerService.Stub {
 
         mVibrationConfig = new VibrationConfig(context.getResources());
         mVibrationSettings = new VibrationSettings(mContext, mHandler, mVibrationConfig);
+        mRichTapVibratorService = new RichTapVibratorService(mContext);
         mVibrationScaler = new VibrationScaler(mVibrationConfig, mVibrationSettings);
         mVibratorControlService = new VibratorControlService(mContext,
                 injector.createVibratorControllerHolder(), mVibrationScaler, mVibrationSettings,
@@ -671,6 +673,32 @@ public class VibratorManagerService extends IVibratorManagerService.Stub {
         return vibrateInternal(uid, deviceId, opPkg, effect, attrs, reason, token);
     }
 
+    /** Plays an effect of the RichTap SDK, which the RichTap vibrator HAL performs. */
+    private void vibrateRichTap(CombinedVibration combined, VibrationEffect effect,
+            CallerInfo callerInfo) {
+        synchronized (mLock) {
+            Status ignoreStatus = shouldIgnoreVibrationLocked(callerInfo);
+            if (ignoreStatus != null) {
+                logAndRecordVibrationAttempt(combined, callerInfo, ignoreStatus);
+                return;
+            }
+            if (mRichTapVibratorService.startsPlayback(effect)) {
+                final long ident = Binder.clearCallingIdentity();
+                try {
+                    clearNextSessionLocked(Status.CANCELLED_SUPERSEDED, callerInfo);
+                    if (mCurrentSession != null) {
+                        mCurrentSession.requestEnd(Status.CANCELLED_SUPERSEDED, callerInfo,
+                                /* immediate= */ true);
+                    }
+                } finally {
+                    Binder.restoreCallingIdentity(ident);
+                }
+            }
+        }
+        mRichTapVibratorService.perform(effect,
+                mVibrationSettings.getCurrentIntensity(callerInfo.attrs.getUsage()));
+    }
+
     HalVibration vibrateWithoutPermissionCheck(int uid, int deviceId, String opPkg,
             @NonNull CombinedVibration effect, @NonNull VibrationAttributes attrs,
             String reason, IBinder token) {
@@ -687,10 +715,17 @@ public class VibratorManagerService extends IVibratorManagerService.Stub {
             return null;
         }
         enforceUpdateAppOpsStatsPermission(uid);
+        if (effect instanceof CombinedVibration.Mono mono
+                && mRichTapVibratorService.isRichTapEffect(mono.getEffect())) {
+            vibrateRichTap(effect, mono.getEffect(), callerInfo);
+            return null;
+        }
         if (!isEffectValid(effect)) {
             logAndRecordVibrationAttempt(effect, callerInfo, Status.IGNORED_INVALID_REQUEST);
             return null;
         }
+        // Both play on the same actuator.
+        mRichTapVibratorService.stop();
         if (effect.hasVendorEffects()) {
             if (!hasPermission(android.Manifest.permission.VIBRATE_VENDOR_EFFECTS)) {
                 Slog.e(TAG, "vibrate; no permission for vendor effects");
@@ -788,6 +823,7 @@ public class VibratorManagerService extends IVibratorManagerService.Stub {
     }
 
     private void cancelVibrateInternal(int usageFilter, IBinder token) {
+        mRichTapVibratorService.stop();
         synchronized (mLock) {
             if (DEBUG) {
                 Slog.d(TAG, "Canceling vibration");
