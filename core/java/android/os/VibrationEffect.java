@@ -1974,12 +1974,16 @@ public abstract class VibrationEffect implements Parcelable {
             new Parcelable.Creator<VibrationEffect>() {
                 @Override
                 public VibrationEffect createFromParcel(Parcel in) {
-                    switch (in.readInt()) {
+                    final int token = in.readInt();
+                    switch (token) {
                         case PARCEL_TOKEN_COMPOSED:
                             return new Composed(in);
                         case PARCEL_TOKEN_VENDOR_EFFECT:
                             return new VendorEffect(in);
                         default:
+                            if (RichTapVibrationEffect.isExtendedEffect(token)) {
+                                return RichTapVibrationEffect.createFromParcel(token, in);
+                            }
                             throw new IllegalStateException(
                                     "Unexpected vibration effect type token in parcel.");
                     }

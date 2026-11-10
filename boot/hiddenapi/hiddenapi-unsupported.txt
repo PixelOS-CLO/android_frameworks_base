@@ -182,6 +182,12 @@ Landroid/os/IUserManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/os/IUs
 Landroid/os/storage/IObbActionListener$Stub;-><init>()V
 Landroid/os/storage/IStorageManager$Stub$Proxy;-><init>(Landroid/os/IBinder;)V
 Landroid/os/storage/IStorageManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/os/storage/IStorageManager;
+Landroid/os/RichTapVibrationEffect;->checkIfRichTapSupport()I
+Landroid/os/RichTapVibrationEffect;->createEnvelope([I[I[IZI)Landroid/os/VibrationEffect;
+Landroid/os/RichTapVibrationEffect;->createExtPreBaked(II)Landroid/os/VibrationEffect;
+Landroid/os/RichTapVibrationEffect;->createHapticParameter([II)Landroid/os/VibrationEffect;
+Landroid/os/RichTapVibrationEffect;->createPatternHeParameter(III)Landroid/os/VibrationEffect;
+Landroid/os/RichTapVibrationEffect;->createPatternHeWithParam([IIIII)Landroid/os/VibrationEffect;
 Landroid/security/IKeyChainService$Stub;->asInterface(Landroid/os/IBinder;)Landroid/security/IKeyChainService;
 Landroid/service/dreams/IDreamManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/service/dreams/IDreamManager;
 Landroid/service/notification/INotificationListener$Stub;-><init>()V

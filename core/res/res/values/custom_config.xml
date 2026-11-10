@@ -165,4 +165,7 @@
        <item>restart_recovery</item>
        <item>restart_bootloader</item>
    </string-array>
+
+    <!-- Whether the device has a RichTap vibrator HAL for apps using the RichTap SDK. -->
+    <bool name="config_richtapSupported">false</bool>
 </resources>
